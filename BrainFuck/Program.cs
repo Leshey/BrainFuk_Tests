@@ -3,37 +3,39 @@
     public static void Main()
     {
         Repository BrainFuckCode = new Repository();
-        DataOperations dataOperations = new DataOperations();
-        dataOperations.enumСodeBrainFuck(BrainFuckCode.Program);
-
+        DataOperations dataOperations = new DataOperations(BrainFuckCode, new InputOutput(Console.In, Console.Out));
+        dataOperations.EnumСodeBrainFuck(BrainFuckCode.Program);
     }
 }
 
 public class Repository
 {
-    private char[] _memory;
-    private int _current;
-    private string _program;
     public char[] Memory { get; set; }
     public int Current { get; set; }
     public string Program { get; set; }
     public Repository()
     {
-      Memory = new char[30000];
-      Current = 0;
-      Program = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+        Memory = new char[30000];
+        Current = 0;
+        Program = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
     }
-
 }
 public class DataOperations
 {
-    Repository dataFromRepository = new Repository();
-    InputOutput inputOutput = new InputOutput();
-    public void enumСodeBrainFuck(string BrainFuckCode)
+    private Repository _brainFuckCode;
+    private InputOutput _inputOutput;
+
+    public DataOperations(Repository brainFuckCode, InputOutput inputOutput)
     {
-        for (int i = 0; i < BrainFuckCode.Length; i++)
+        _brainFuckCode = brainFuckCode;
+        _inputOutput = inputOutput;
+    }
+
+    public void EnumСodeBrainFuck(string brainFuckCode)
+    {
+        for (int i = 0; i < brainFuckCode.Length; i++)
         {
-            switch (BrainFuckCode[i])
+            switch (brainFuckCode[i])
             {
                 case '+':
                     NextCharValue();
@@ -54,100 +56,111 @@ public class DataOperations
                     InputValueInCell();
                     break;
                 case '[':
-                    i = IfZeroNext(i, BrainFuckCode);
+                    i = IfZeroNext(i, brainFuckCode);
                     break;
                 case ']':
-                    i = IfNoZeroBack(i, BrainFuckCode);
+                    i = IfNoZeroBack(i, brainFuckCode);
                     break;
             }
         }
     }
-    public void NextCharValue()
+    public virtual void NextCharValue()
     {
-        dataFromRepository.Memory[dataFromRepository.Current]++;
-      // так не рабит нихуя
-      //dataFromRepository.Memory[dataFromRepository.Current] = Convert.ToChar(Convert.ToInt32(dataFromRepository.Memory[dataFromRepository.Current]) + 1);
-    }
-
-    public void PreviousCharValue()
-    {
-
-        dataFromRepository.Memory[dataFromRepository.Current]--;
-        // так не рабит нихуя
-        // dataFromRepository.Memory[dataFromRepository.Current] = Convert.ToChar(Convert.ToInt32(dataFromRepository.Memory[dataFromRepository.Current]) - 1);
-
-    }
-    public void DisplayCellValue()
-    {
-        inputOutput.OutputConsole(Convert.ToString(dataFromRepository.Memory[dataFromRepository.Current]));
-    }
-    public void NextCell()
-    {
-        if (dataFromRepository.Current<dataFromRepository.Memory.Length)
+        if (_brainFuckCode.Memory[_brainFuckCode.Current] < char.MaxValue)
         {
-            dataFromRepository.Current = dataFromRepository.Current + 1;
+            _brainFuckCode.Memory[_brainFuckCode.Current]++;
         }
-        
     }
-    public void PreviusCell()
+
+    public virtual void PreviousCharValue()
     {
-        if (dataFromRepository.Current>0)
+        if (_brainFuckCode.Memory[_brainFuckCode.Current] > char.MinValue) 
         {
-            dataFromRepository.Current = dataFromRepository.Current - 1;
+            _brainFuckCode.Memory[_brainFuckCode.Current]--;
         }
-        
     }
-    public void InputValueInCell()
+    public virtual void DisplayCellValue()
     {
-        dataFromRepository.Memory[dataFromRepository.Current] = inputOutput.GetCharUser();
+        _inputOutput.OutputConsole(Convert.ToString(_brainFuckCode.Memory[_brainFuckCode.Current]));
     }
-    public int IfZeroNext(int PositionNumber, string BrainFuckCode)
+    public virtual void NextCell()
     {
-        if (dataFromRepository.Memory[dataFromRepository.Current] == 0)
+        if (_brainFuckCode.Current<_brainFuckCode.Memory.Length)
         {
-            int NumberOfopenBrackets = 1;
-            while (NumberOfopenBrackets != 0)
+            _brainFuckCode.Current = _brainFuckCode.Current + 1;
+        }
+    }
+    public virtual void PreviusCell()
+    {
+        if (_brainFuckCode.Current>0)
+        {
+            _brainFuckCode.Current = _brainFuckCode.Current - 1;
+        }
+    }
+    public virtual void InputValueInCell()
+    {
+        _brainFuckCode.Memory[_brainFuckCode.Current] = _inputOutput.GetCharUser();
+    }
+    public virtual int IfZeroNext(int PositionNumber, string brainFuckCode)
+    {
+        if (_brainFuckCode.Memory[_brainFuckCode.Current] == 0)
+        {
+            int NumberOfopenBrackets = 0;
+            PositionNumber += 1;
+            while (brainFuckCode[PositionNumber] != ']' || NumberOfopenBrackets != 0)
             {
-                PositionNumber++;
-                if (BrainFuckCode[PositionNumber] == '[')
+                if (brainFuckCode[PositionNumber] == '[')
                 {
-                    NumberOfopenBrackets++;
+                    NumberOfopenBrackets += 1;
+                    PositionNumber += 1;
                 }
-                if (BrainFuckCode[PositionNumber] == ']')
+                if (brainFuckCode[PositionNumber] == ']')
                 {
-                    NumberOfopenBrackets--;
+                    NumberOfopenBrackets -= 1;
+                    PositionNumber += 1;
                 }
+                PositionNumber += 1;
             }
         }
-        return PositionNumber + 1;
+        return PositionNumber;
     }
-    public int IfNoZeroBack(int PositionNumber, string BrainFuckCode)
+    public virtual int IfNoZeroBack(int PositionNumber, string brainFuckCode)
     {
-        if (dataFromRepository.Memory[dataFromRepository.Current] != 0)
+        if (_brainFuckCode.Memory[_brainFuckCode.Current] != 0)
         {
-            int NumberOfopenBrackets = 1;
-            while (NumberOfopenBrackets != 0)
+            int NumberOfopenBrackets = 0;
+            PositionNumber -= 1;
+            while (brainFuckCode[PositionNumber] != '[' || NumberOfopenBrackets != 0)
             {
-                PositionNumber--;
-                if (BrainFuckCode[PositionNumber] == ']')
+                if (brainFuckCode[PositionNumber] == ']')
                 {
-                    NumberOfopenBrackets++;
+                    NumberOfopenBrackets += 1;
+                    PositionNumber -= 1;
                 }
-                if (BrainFuckCode[PositionNumber] == '[')
+                if (brainFuckCode[PositionNumber] == '[')
                 {
-                    NumberOfopenBrackets--;
+                    NumberOfopenBrackets -= 1;
+                    PositionNumber -= 1;
                 }
-
+                PositionNumber -= 1;
             }
         }
-        return PositionNumber - 1;
+        return PositionNumber;
     }
-
-    
 }
 
 public class InputOutput
 {
+    private TextReader Reader;
+    private TextWriter Writer;
+
+    public InputOutput(TextReader output, TextWriter input) 
+    {
+        Reader = output;
+        Writer = input;
+    }
+    
+
     public char GetCharUser()
     {
         while (true)
@@ -157,20 +170,14 @@ public class InputOutput
             {
                 return result;
             }
-            // А так можно?
-            //if (char.TryParse(GetStringUser(), out char result))
-            //{
-            //    return result;
-            //}
         }
     }
     public string GetStringUser()
     {
-        return Console.ReadLine();
+        return Reader.ReadLine();
     }
     public void OutputConsole(string messageOrChar)
     {
-        Console.WriteLine(messageOrChar);
+        Writer.Write(messageOrChar);    
     }
-
 }
