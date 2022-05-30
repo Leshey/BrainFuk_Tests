@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using Xunit;
+using Moq;
 
 namespace BrainFuck.Tests
 {
@@ -11,8 +12,12 @@ namespace BrainFuck.Tests
 
     public class Tests
     {
-        [Fact]
-        public void NextCharValueTest()
+        [Theory]
+        [InlineData(33)]
+        [InlineData(123)]
+        [InlineData(155)]
+
+        public void NextCharValueTest(int num)
         {
             //arrange
             var repository = new Repository();
@@ -22,58 +27,51 @@ namespace BrainFuck.Tests
             var inputOutput = new InputOutput(testTextReader, testTextWriter);
             var dataOperations = new DataOperations(repository, inputOutput);
 
-            var num = 33;
-            var expectedCurrent1 = num;
-            var expectedCurrent2 = num;
-            char newCurrent = (char)(num - 1);
+            var expectedCurrent = num;
 
             //act
             for (var i = 0; i < num; i++)
             {
                 dataOperations.NextCharValue();
             }
-            var actual1 = repository.Memory[repository.Current];
-
-            repository.Memory[repository.Current] = newCurrent;
-            dataOperations.NextCharValue();
-            var actual2 = repository.Memory[repository.Current];
+            var actual = repository.Memory[repository.Current];
 
             //assert
-            Assert.Equal(expectedCurrent1, actual1);
-            Assert.Equal(expectedCurrent2, actual2);
+            Assert.Equal(expectedCurrent, actual);
         }
 
-        [Fact]
-        public void PreviousCharValueTest()
+        [Theory]
+        [InlineData(33)]
+        [InlineData(123)]
+        [InlineData(155)]
+        public void NextCharValueMockTest(int num) 
         {
             //arrange
-            var repository = new Repository();
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
+            var mockIRepository = new Mock<IRepository>();
+            mockIRepository.SetupProperty(x => x.Memory, new char[30000]);
+            mockIRepository.SetupProperty(x => x.Current, 0);
+            var mockIInputOutput = new Mock<IInputOutput>();
 
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var dataOperations = new DataOperations(mockIRepository.Object, mockIInputOutput.Object);
 
-            var expectedCurrent1 = '\0';
-
-            var expectedCurrent2 = '!';
-            char newCurrent2 = (char)34;
+            var expectedCurrent = num;
 
             //act
-            dataOperations.PreviousCharValue();
-            var actual1 = repository.Memory[repository.Current];
-
-            repository.Memory[repository.Current] = newCurrent2;
-            dataOperations.PreviousCharValue();
-            var actual2 = repository.Memory[repository.Current];
+            for (var i = 0; i < num; i++)
+            {
+                dataOperations.NextCharValue();
+            }
+            var actual = mockIRepository.Object.Memory[mockIRepository.Object.Current];
 
             //assert
-            Assert.Equal(expectedCurrent1, actual1);
-            Assert.Equal(expectedCurrent2, actual2);
+            Assert.Equal(expectedCurrent, actual);
         }
 
-        [Fact]
-        public void NextCellTest()
+        [Theory]
+        [InlineData('"')]
+        [InlineData(')')]
+        [InlineData('!')]
+        public void PreviousCharValueTest(char newChar)
         {
             //arrange
             var repository = new Repository();
@@ -83,25 +81,49 @@ namespace BrainFuck.Tests
             var inputOutput = new InputOutput(testTextReader, testTextWriter);
             var dataOperations = new DataOperations(repository, inputOutput);
 
-            var expectedCurrent = repository.Current + 1;
-            var newCurrent = 69;
-            var expectedCurrent2 = 70;
+            var expectedCurrent = newChar - 1;
+
+            //act
+
+            repository.Memory[repository.Current] = newChar;
+            dataOperations.PreviousCharValue();
+            var actual = repository.Memory[repository.Current];
+
+            //assert
+
+            Assert.Equal(expectedCurrent, actual);
+        }
+
+        [Theory]
+        [InlineData(69)]
+        [InlineData(123)]
+        public void NextCellTest(int newCurrent)
+        {
+            //arrange
+            var repository = new Repository();
+            var testTextReader = new TestTextReader();
+            var testTextWriter = new TestTextWriter();
+
+            var inputOutput = new InputOutput(testTextReader, testTextWriter);
+            var dataOperations = new DataOperations(repository, inputOutput);
+
+            var expectedCurrent = newCurrent + 1;
+            repository.Current = newCurrent;
 
             //act
             dataOperations.NextCell();
-            var actual1 = repository.Current;
-
-            repository.Current = newCurrent;
-            dataOperations.NextCell();
-            var actual2 = repository.Current;
+            var actual = repository.Current;
 
             //assert
-            Assert.Equal(expectedCurrent, actual1);
-            Assert.Equal(expectedCurrent2, actual2);
+            Assert.Equal(expectedCurrent, actual);
+
         }
 
-        [Fact]
-        public void PreviousCellTest()
+        [Theory]
+        [InlineData(70)]
+        [InlineData(120)]
+        [InlineData(1)]
+        public void PreviousCellTest(int newCurrent)
         {
             //arrange
             var repository = new Repository();
@@ -111,21 +133,19 @@ namespace BrainFuck.Tests
             var inputOutput = new InputOutput(testTextReader, testTextWriter);
             var dataOperations = new DataOperations(repository, inputOutput);
 
-            var expectedCurrent = repository.Current;
-            var newCurrent = 70;
-            var expectedCurrent2 = 69;
+            var expectedCurrent = newCurrent - 1;
+            repository.Current = newCurrent;
 
             //act
             dataOperations.PreviusCell();
-            var actual1 = repository.Current;
+            var actual = repository.Current;
 
             repository.Current = newCurrent;
             dataOperations.PreviusCell();
             var actual2 = repository.Current;
 
             //assert
-            Assert.Equal(expectedCurrent, actual1);
-            Assert.Equal(expectedCurrent2, actual2);
+            Assert.Equal(expectedCurrent, actual);
         }
 
         [Fact]
@@ -143,17 +163,41 @@ namespace BrainFuck.Tests
             var expectedCurrent1 = 18;
 
             //act
-            int actual1 = 0;
+            var actual1 = dataOperations.IfZeroNext(5, repository.Program);
+
+            //assert
+            Assert.Equal(expectedCurrent1, actual1);
+        }
+
+        [Theory]
+        [InlineData("++++[>++++++++++<-]>.", 18)]
+        [InlineData("++[>++++<-]>.", 10)]
+
+        public void IfZeroNextTestTheory(string program, int expectedNum)
+        {
+            //arrange
+            var repository = new Repository();
+            repository.Program = program;
+            var testTextReader = new TestTextReader();
+            var testTextWriter = new TestTextWriter();
+
+            var inputOutput = new InputOutput(testTextReader, testTextWriter);
+            var dataOperations = new DataOperations(repository, inputOutput);
+
+            var expectedCurrent = expectedNum;
+
+            //act
+            int actual = 0;
             for (int i = 0; i < repository.Program.Length; i++)
             {
                 if (repository.Program[i] == '[')
                 {
-                    actual1 = dataOperations.IfZeroNext(i, repository.Program);
+                    actual = dataOperations.IfZeroNext(i, repository.Program);
                 }
             }
 
             //assert
-            Assert.Equal(expectedCurrent1, actual1);
+            Assert.Equal(expectedCurrent, actual);
         }
 
         [Fact]
@@ -184,26 +228,59 @@ namespace BrainFuck.Tests
             Assert.Equal(expectedCurrent1, actual1);
         }
 
-        [Fact]
-        public void DisplayCellValueTest()
+        [Theory]
+        [InlineData("++++[>++++++++++<-]>.", 4)]
+        [InlineData("++[>++++<-]>.", 2)]
+        public void IfNoZeroBackTestTheory(string program, int expectedNum)
         {
             //arrange
             var repository = new Repository();
+            repository.Program = program;
             var testTextReader = new TestTextReader();
             var testTextWriter = new TestTextWriter();
 
             var inputOutput = new InputOutput(testTextReader, testTextWriter);
             var dataOperations = new DataOperations(repository, inputOutput);
 
+            //act
+            int actual1 = 0;
+            repository.Memory[0]++;
+            for (int i = 0; i < repository.Program.Length; i++)
+            {
+                if (repository.Program[i] == ']')
+                {
+                    actual1 = dataOperations.IfNoZeroBack(i, repository.Program);
+                }
+            }
+            //assert
+            Assert.Equal(expectedNum, actual1);
+        }
+
+        [Fact]
+        public void DisplayCellValueTest()
+        {
+            //arrange
+            var mockTextWrite = new Mock<TextWriter>();
+            var called = false;
+            
+            mockTextWrite.Setup(x => x.Write("H")).Callback(() => called = true);
+            
+            var repository = new Repository();
+            var testTextReader = new TestTextReader();
+            var testTextWriter = new TestTextWriter();
+
+            var inputOutput = new InputOutput(testTextReader, mockTextWrite.Object);
+            var dataOperations = new DataOperations(repository, inputOutput);
+
             repository.Memory[0] = 'H';
-            var expectedValue1 = "H";
+
 
             //act
             dataOperations.DisplayCellValue();
-            var actual1 = testTextWriter.OutputMem;
+
 
             //assert
-            Assert.Equal(expectedValue1, actual1);
+            Assert.True(called);
 
 
         }
@@ -245,56 +322,57 @@ namespace BrainFuck.Tests
             var inputOutput = new InputOutput(testTextReader, testTextWriter);
             var dataOperationsTest = new DataOperationsTest(repository, inputOutput);
 
-            var expectedValue = true;
+            var expectedValue1 = nameof(dataOperationsTest.NextCharValue);
+            var expectedValue2 = nameof(dataOperationsTest.PreviousCharValue);
+            var expectedValue3 = nameof(dataOperationsTest.DisplayCellValue);
+            var expectedValue4 = nameof(dataOperationsTest.NextCell);
+            var expectedValue5 = nameof(dataOperationsTest.PreviusCell);
+            var expectedValue6 = nameof(dataOperationsTest.InputValueInCell);
+            var expectedValue7 = nameof(dataOperationsTest.IfZeroNext);
+            var expectedValue8 = nameof(dataOperationsTest.IfNoZeroBack);
+            
             //act
             repository.Program = "+";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual1 = dataOperationsTest.Execution;
+            var actual1 = dataOperationsTest.FuncName;
 
             repository.Program = "-";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual2 = dataOperationsTest.Execution;
+            var actual2 = dataOperationsTest.FuncName;
 
             repository.Program = ".";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual3 = dataOperationsTest.Execution;
+            var actual3 = dataOperationsTest.FuncName;
 
             repository.Program = ">";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual4 = dataOperationsTest.Execution;
+            var actual4 = dataOperationsTest.FuncName;
 
             repository.Program = "<";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual5 = dataOperationsTest.Execution;
+            var actual5 = dataOperationsTest.FuncName;
 
             repository.Program = ",";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual6 = dataOperationsTest.Execution;
+            var actual6 = dataOperationsTest.FuncName;
 
             repository.Program = "[";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual7 = dataOperationsTest.Execution;
+            var actual7 = dataOperationsTest.FuncName;
 
             repository.Program = "]";
-            dataOperationsTest.Execution = false;
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
-            var actual8 = dataOperationsTest.Execution;
+            var actual8 = dataOperationsTest.FuncName;
+            
             //assert
-            Assert.Equal(expectedValue, actual1);
-            Assert.Equal(expectedValue, actual2);
-            Assert.Equal(expectedValue, actual3);
-            Assert.Equal(expectedValue, actual4);
-            Assert.Equal(expectedValue, actual5);
-            Assert.Equal(expectedValue, actual6);
-            Assert.Equal(expectedValue, actual7);
-            Assert.Equal(expectedValue, actual8);
+            Assert.Equal(expectedValue1, actual1);
+            Assert.Equal(expectedValue2, actual2);
+            Assert.Equal(expectedValue3, actual3);
+            Assert.Equal(expectedValue4, actual4);
+            Assert.Equal(expectedValue5, actual5);
+            Assert.Equal(expectedValue6, actual6);
+            Assert.Equal(expectedValue7, actual7);
+            Assert.Equal(expectedValue8, actual8);
         }
 
 
@@ -304,6 +382,7 @@ namespace BrainFuck.Tests
             private InputOutput _inputOutput;
 
             public bool Execution { get; set; }
+            public string FuncName { get; set; }
 
             public DataOperationsTest(Repository brainFuckCode, InputOutput inputOutput) : base(brainFuckCode, inputOutput)
             {
@@ -314,40 +393,48 @@ namespace BrainFuck.Tests
             public override void NextCharValue() 
             {
                 Execution = true;
+                FuncName = nameof(NextCharValue);
             }
 
             public override void PreviousCharValue()
             {
                 Execution = true;
+                FuncName = nameof(PreviousCharValue);
             }
 
             public override void DisplayCellValue()
             {
                 Execution = true;
+                FuncName = nameof(DisplayCellValue);
             }
             public override void NextCell()
             {
                 Execution = true;
+                FuncName = nameof(NextCell);
             }
 
             public override void PreviusCell()
             {
                 Execution = true;
+                FuncName = nameof(PreviusCell);
             }
 
             public override void InputValueInCell()
             {
                 Execution = true;
+                FuncName = nameof(InputValueInCell);
             }
 
             public override int IfZeroNext(int i, string s)
             {
+                FuncName = nameof(IfZeroNext);
                 Execution = true;
                 return 0;
             }
 
             public override int IfNoZeroBack(int i, string s)
             {
+                FuncName = nameof(IfNoZeroBack);
                 Execution = true;
                 return 0;
             }
