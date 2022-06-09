@@ -1,7 +1,9 @@
+using Moq;
 using System.IO;
 using System.Text;
 using Xunit;
-using Moq;
+
+
 
 namespace BrainFuck.Tests
 {
@@ -12,6 +14,7 @@ namespace BrainFuck.Tests
 
     public class Tests
     {
+
         [Theory]
         [InlineData(33)]
         [InlineData(123)]
@@ -21,11 +24,8 @@ namespace BrainFuck.Tests
         {
             //arrange
             var repository = new Repository();
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent = num;
 
@@ -44,7 +44,7 @@ namespace BrainFuck.Tests
         [InlineData(33)]
         [InlineData(123)]
         [InlineData(155)]
-        public void NextCharValueMockTest(int num) 
+        public void NextCharValueMockTest(int num)
         {
             //arrange
             var mockIRepository = new Mock<IRepository>();
@@ -75,11 +75,8 @@ namespace BrainFuck.Tests
         {
             //arrange
             var repository = new Repository();
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent = newChar - 1;
 
@@ -101,11 +98,8 @@ namespace BrainFuck.Tests
         {
             //arrange
             var repository = new Repository();
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent = newCurrent + 1;
             repository.Current = newCurrent;
@@ -127,11 +121,8 @@ namespace BrainFuck.Tests
         {
             //arrange
             var repository = new Repository();
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent = newCurrent - 1;
             repository.Current = newCurrent;
@@ -154,11 +145,8 @@ namespace BrainFuck.Tests
             //arrange
             var repository = new Repository();
             repository.Program = "++++[>++++++++++<-]>.";
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent1 = 18;
 
@@ -178,11 +166,8 @@ namespace BrainFuck.Tests
             //arrange
             var repository = new Repository();
             repository.Program = program;
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent = expectedNum;
 
@@ -206,11 +191,8 @@ namespace BrainFuck.Tests
             //arrange
             var repository = new Repository();
             repository.Program = "++++[>++++++++++<-]>.";
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             var expectedCurrent1 = 4;
 
@@ -236,11 +218,8 @@ namespace BrainFuck.Tests
             //arrange
             var repository = new Repository();
             repository.Program = program;
-            var testTextReader = new TestTextReader();
-            var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperations = new DataOperations(repository, inputOutput);
+            var mockIInputOutput = new Mock<IInputOutput>();
+            var dataOperations = new DataOperations(repository, mockIInputOutput.Object);
 
             //act
             int actual1 = 0;
@@ -262,9 +241,9 @@ namespace BrainFuck.Tests
             //arrange
             var mockTextWrite = new Mock<TextWriter>();
             var called = false;
-            
+
             mockTextWrite.Setup(x => x.Write("H")).Callback(() => called = true);
-            
+
             var repository = new Repository();
             var testTextReader = new TestTextReader();
             var testTextWriter = new TestTextWriter();
@@ -311,16 +290,15 @@ namespace BrainFuck.Tests
         }
 
         [Fact]
-        public void Enum—odeBrainFuckTests() 
+        public void Enum—odeBrainFuckTests()
         {
             //arrange
             var repository = new Repository();
-            
+
             var testTextReader = new TestTextReader();
             var testTextWriter = new TestTextWriter();
-
-            var inputOutput = new InputOutput(testTextReader, testTextWriter);
-            var dataOperationsTest = new DataOperationsTest(repository, inputOutput);
+            var mockIInputOutput = new Mock<InputOutput>(testTextReader, testTextWriter);
+            var dataOperationsTest = new DataOperationsTest(repository, mockIInputOutput.Object);
 
             var expectedValue1 = nameof(dataOperationsTest.NextCharValue);
             var expectedValue2 = nameof(dataOperationsTest.PreviousCharValue);
@@ -330,7 +308,7 @@ namespace BrainFuck.Tests
             var expectedValue6 = nameof(dataOperationsTest.InputValueInCell);
             var expectedValue7 = nameof(dataOperationsTest.IfZeroNext);
             var expectedValue8 = nameof(dataOperationsTest.IfNoZeroBack);
-            
+
             //act
             repository.Program = "+";
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
@@ -363,7 +341,7 @@ namespace BrainFuck.Tests
             repository.Program = "]";
             dataOperationsTest.Enum—odeBrainFuck(repository.Program);
             var actual8 = dataOperationsTest.FuncName;
-            
+
             //assert
             Assert.Equal(expectedValue1, actual1);
             Assert.Equal(expectedValue2, actual2);
@@ -390,7 +368,7 @@ namespace BrainFuck.Tests
                 _inputOutput = inputOutput;
             }
 
-            public override void NextCharValue() 
+            public override void NextCharValue()
             {
                 Execution = true;
                 FuncName = nameof(NextCharValue);
@@ -446,15 +424,15 @@ namespace BrainFuck.Tests
 
             public string InputMem => _input;
 
-            public TestTextReader(string input) 
+            public TestTextReader(string input)
             {
                 _input = input;
             }
-            public TestTextReader() 
+            public TestTextReader()
             {
             }
 
-            public override string ReadLine() 
+            public override string ReadLine()
             {
                 return _input;
             }
@@ -472,7 +450,7 @@ namespace BrainFuck.Tests
                 _output = output;
             }
 
-            public TestTextWriter() 
+            public TestTextWriter()
             {
             }
 

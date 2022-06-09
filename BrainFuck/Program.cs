@@ -1,85 +1,75 @@
 ﻿namespace BrainFuck;
-public static partial class Program
+public static class Program
 {
     public static void Main()
     {
+        var consoleCursorWrapper = new ConsoleCursorWrapper();
+        var inputOutput = new InputOutput(Console.In, Console.Out, consoleCursorWrapper);
+        var menu = new Menu(inputOutput, inputOutput);
+
+        menu.RunMenu();
+    }
+}
+
+public interface IMenuTextWriter 
+{
+    void PrintMenu(MenuLine[] menuLines, int selectedMenuIndex);
+}
+
+public class Menu 
+{
+    private readonly IMenuTextWriter _menuTextWriter;
+    private readonly IInputOutput _inputOutput;
+
+    public Menu(IMenuTextWriter menuTextWriter, IInputOutput inputOutput) 
+    {
+        _menuTextWriter = menuTextWriter;
+        _inputOutput = inputOutput;
+    }
+
+    public void RunMenu() 
+    {
         var exitToken = new ExitToken();
 
-        var menuLines = new[] { new MenuLine("Run the program", new DefaultBrainFuckCommand()),
-                                new MenuLine("Go fuck yourself", new DefaultBrainFuckCommand()),
-                                new MenuLine("Exit", new ExitCommand(exitToken))
+        var menuLines = new[] { new MenuLine("Run the \"Hello World\" program and go fuck yourself!", new DefaultBrainFuckCommand(_inputOutput)),
+                                new MenuLine("Do Default command and go fuck yourself!", new DefaultCommand()),
+                                new MenuLine("Run your program and go fuck yourself!", new EnterAndExecuteProgramCommand(_inputOutput)),
+                                new MenuLine("Exit. And you may want to go and fuck yourself!", new ExitCommand(exitToken))
         };
         var menuIndex = 0;
-        
-        PrintMenu(menuLines, menuIndex);
 
-        while (true) 
+        _menuTextWriter.PrintMenu(menuLines, menuIndex);
+
+        while (true)
         {
-
-            
             var consoleKeyInfo = Console.ReadKey(true);
             if (consoleKeyInfo.Key == ConsoleKey.UpArrow)
             {
                 menuIndex -= 1;
                 menuIndex = menuIndex < 0 ? 0 : menuIndex;
             }
-            else if (consoleKeyInfo.Key == ConsoleKey.DownArrow) 
+            else if (consoleKeyInfo.Key == ConsoleKey.DownArrow)
             {
                 menuIndex += 1;
                 menuIndex = menuIndex >= menuLines.Length ? menuLines.Length - 1 : menuIndex;
             }
-            else if (consoleKeyInfo.Key == ConsoleKey.Enter) 
+            else if (consoleKeyInfo.Key == ConsoleKey.Enter)
             {
                 var item = menuLines[menuIndex];
                 item.Execute();
-                if (exitToken.IsCanceled == false) 
+                if (exitToken.IsCanceled == false)
                 {
                     Console.Clear();
                 }
             }
 
-            if (exitToken.IsCanceled) 
+            if (exitToken.IsCanceled)
             {
                 return;
             }
 
-            PrintMenu(menuLines, menuIndex);    
-        }
-    }
-    private static void PrintMenu(MenuLine[] menuLines, int menuIndex) 
-    {
-        Console.SetCursorPosition(0, 0);
-        
-        var index = 0;
-        foreach (var menuLine in menuLines)
-        {
-            if (index == menuIndex)
-            {
-                Console.Write(">");
-            }
-            else
-            {
-                Console.Write(" ");
-            }
-
-            Console.Write(menuLine.Name);
-            Console.Write("\n");
-            index += 1;
-        }
-    }
-
-    public class ExitToken
-    {
-        public bool IsCanceled { get; private set; }
-
-        public ExitToken() 
-        {
-            IsCanceled = false;
+            _menuTextWriter.PrintMenu(menuLines, menuIndex);
         }
 
-        public void MakeCanceled() 
-        {
-            IsCanceled = true;
-        }
     }
 }

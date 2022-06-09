@@ -1,5 +1,5 @@
 ﻿namespace BrainFuck;
-public interface ICommand 
+public interface ICommand
 {
     void Execute();
 }

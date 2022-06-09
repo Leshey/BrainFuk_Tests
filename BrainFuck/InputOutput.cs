@@ -1,15 +1,23 @@
 ﻿namespace BrainFuck;
-public class InputOutput : IInputOutput
+public class InputOutput : IInputOutput, IMenuTextWriter
 {
     private TextReader Reader;
     private TextWriter Writer;
+    private ICursorWrapper _cursorWrapper;
 
-    public InputOutput(TextReader output, TextWriter input) 
+    public InputOutput(TextReader output, TextWriter input, ICursorWrapper cursorWrapper)
+    {
+        Reader = output;
+        Writer = input;
+        _cursorWrapper = cursorWrapper;
+    }
+
+    public InputOutput(TextReader output, TextWriter input)
     {
         Reader = output;
         Writer = input;
     }
-    
+
     public char GetCharUser()
     {
         while (true)
@@ -27,6 +35,28 @@ public class InputOutput : IInputOutput
     }
     public void OutputConsole(string messageOrChar)
     {
-        Writer.Write(messageOrChar);    
+        Writer.Write(messageOrChar);
     }
+    
+    public void PrintMenu(MenuLine[] menuLines, int selectedMenuIndex) 
+    {
+        _cursorWrapper.SetCursorPosition(0, 0);
+        var index = 0;
+        foreach (var menuLine in menuLines)
+        {
+            if (index == selectedMenuIndex)
+            {
+                Console.Write(">");
+            }
+            else
+            {
+                Console.Write(" ");
+            }
+
+            Console.Write(menuLine.Name);
+            Console.Write("\n");
+            index += 1;
+        }
+    }
+
 }

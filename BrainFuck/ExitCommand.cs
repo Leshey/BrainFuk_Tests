@@ -1,18 +1,17 @@
 ﻿namespace BrainFuck;
-public static partial class Program
+
+public class ExitCommand : ICommand
 {
-    public class ExitCommand : ICommand 
+    private readonly ExitToken _exitToken;
+
+    public ExitCommand(ExitToken exitToken)
     {
-        private readonly ExitToken _exitToken;
+        _exitToken = exitToken;
+    }
 
-        public ExitCommand(ExitToken exitToken) 
-        {
-            _exitToken = exitToken;
-        }
-
-        public void Execute() 
-        {
-            _exitToken.MakeCanceled();
-        }
+    public void Execute()
+    {
+        _exitToken.MakeCanceled();
     }
 }
+

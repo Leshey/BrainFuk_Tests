@@ -54,7 +54,7 @@ public class DataOperations
 
     public virtual void PreviousCharValue()
     {
-        if (_brainFuckCode.Memory[_brainFuckCode.Current] > char.MinValue) 
+        if (_brainFuckCode.Memory[_brainFuckCode.Current] > char.MinValue)
         {
             _brainFuckCode.Memory[_brainFuckCode.Current]--;
         }
@@ -65,14 +65,14 @@ public class DataOperations
     }
     public virtual void NextCell()
     {
-        if (_brainFuckCode.Current<_brainFuckCode.Memory.Length)
+        if (_brainFuckCode.Current < _brainFuckCode.Memory.Length)
         {
             _brainFuckCode.Current = _brainFuckCode.Current + 1;
         }
     }
     public virtual void PreviusCell()
     {
-        if (_brainFuckCode.Current>0)
+        if (_brainFuckCode.Current > 0)
         {
             _brainFuckCode.Current = _brainFuckCode.Current - 1;
         }

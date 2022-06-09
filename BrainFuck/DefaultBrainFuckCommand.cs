@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
-namespace BrainFuck
+﻿namespace BrainFuck
 {
-    public class DefaultBrainFuckCommand : ICommand 
+    public class DefaultBrainFuckCommand : ICommand
     {
-        public void Execute() 
+        private readonly IInputOutput _inputOutput;
+
+        public DefaultBrainFuckCommand(IInputOutput inputOutput) 
+        {
+            _inputOutput = inputOutput;
+        }
+        public void Execute()
         {
             Console.Clear();
 
             Repository BrainFuckCode = new Repository();
-            DataOperations dataOperations = new DataOperations(BrainFuckCode, new InputOutput(Console.In, Console.Out));
+            DataOperations dataOperations = new DataOperations(BrainFuckCode, _inputOutput);
             dataOperations.EnumСodeBrainFuck(BrainFuckCode.Program);
 
             Console.WriteLine("\nPress any button.");
